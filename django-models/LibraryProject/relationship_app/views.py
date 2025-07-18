@@ -5,11 +5,11 @@ from .models import Book, Library
 # Function-Based View (strict match)
 def list_books(request):
     books = Book.objects.all()  # exact requirement
-    return render(request, 'list_books.html', {'books': books})  # exact template path
+    return render(request, 'relationship_app/list_books.html', {'books': books})  # exact template path
 
 # Class-Based View
 class LibraryDetailView(DetailView):
     model = Library
-    template_name = 'library_detail.html'
+    template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
 
