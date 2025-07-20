@@ -1,4 +1,4 @@
-from django.shortcuts import rende, redirect
+from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
 from .models import Book, Library
 from django.contrib.auth.forms import UserCreationForm
@@ -13,7 +13,7 @@ def register(request):
             return redirect('login')
     else:
         form = UserCreationForm()
-    return render(request, 'relationship_app/register.html', {'form': form}
+    return render(request, 'relationship_app/register.html', {'form': form})
 
 # Function-Based View (strict match)
 def list_books(request):
