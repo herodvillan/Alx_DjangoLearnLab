@@ -1,6 +1,12 @@
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render
-from .models import Profile
+from .models import Profile, Book
+
+@permission_required('relationship_app.view_book', raise_exception=True)
+def book_list(request):
+    books = Book.objects.all()
+    return render(request, 'relationship_app/book_list.html', {'books': books})
+
 
 @permission_required('accounts.can_view', raise_exception=True)
 def view_profile(request):
