@@ -119,7 +119,7 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
 SECURE_SSL_REDIRECT = True
-
+SECURE_HSTS_SECONDS = 31536000
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
