@@ -1,6 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
+class Profile(models.Model):
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        permissions = [
+            ("can_view", "Can view profile"),
+            ("can_create", "Can create profile"),
+            ("can_edit", "Can edit profile"),
+            ("can_delete", "Can delete profile"),
+        ]
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         user = self.model(username=username, email=self.normalize_email(email), **extra_fields)
