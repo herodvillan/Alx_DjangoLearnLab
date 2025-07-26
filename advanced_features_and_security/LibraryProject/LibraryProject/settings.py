@@ -118,7 +118,7 @@ CSRF_COOKIE_SECURE = True
 # Ensures session cookies are only sent over HTTPS
 SESSION_COOKIE_SECURE = True
 
-
+SECURE_SSL_REDIRECT = True
 
 
 # Internationalization
