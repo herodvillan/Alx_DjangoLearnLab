@@ -101,6 +101,24 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+# ─── Security Settings ─────────────────────────────────────────────
+
+# Prevents some XSS attacks in modern browsers
+SECURE_BROWSER_XSS_FILTER = True
+
+# Prevents your site from being embedded in a frame (clickjacking protection)
+X_FRAME_OPTIONS = 'DENY'
+
+# Prevents MIME-type sniffing
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Ensures CSRF cookies are only sent over HTTPS
+CSRF_COOKIE_SECURE = True
+
+# Ensures session cookies are only sent over HTTPS
+SESSION_COOKIE_SECURE = True
+
+
 
 
 # Internationalization
