@@ -1,22 +1,18 @@
-from rest_framework import serializers
-from .models import Author, Book
+from django.db import models
 
 
-class BookSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields = ['title', 'publication_year', 'author']
+class Author(models.Model):
+    name = models.CharField(max_length=255)
 
-    def validate_publication_year(self, value):
-        if value > 2025:
-            raise serializers.ValidationError("Publication year cannot be in the future.")
-        return value
+    def __str__(self):
+        return self.name
 
 
-class AuthorSerializer(serializers.ModelSerializer):
-    books = BookSerializer(many=True, read_only=True)  # <-- satisfies (many=True, read_only=True)
+class Book(models.Model):
+    title = models.CharField(max_length=255)
+    publication_year = models.IntegerField()
+    author = models.ForeignKey(Author, related_name='books', on_delete=models.CASCADE)
 
-    class Meta:
-        model = Author
-        fields = ['name', 'books']
+    def __str__(self):
+        return f"{self.title} ({self.publication_year})"
 
