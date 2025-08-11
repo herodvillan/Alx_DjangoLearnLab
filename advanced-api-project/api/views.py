@@ -10,6 +10,7 @@ class BookListView(generics.ListAPIView):
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    search_fields = ['title', 'author__name']
     filterset_fields = ['author', 'publication_year', ]
 
 class BookDetailView(generics.RetrieveAPIView):
