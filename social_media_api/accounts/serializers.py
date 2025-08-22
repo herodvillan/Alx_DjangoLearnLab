@@ -1,51 +1,55 @@
-from django.contrib.auth import get_user_model, authenticate
-from rest_framework import serializers
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
+from django.contrib.auth import get_user_model
+
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 User = get_user_model()
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    token = serializers.CharField(read_only=True)
 
-    class Meta:
-        model = User
-        fields = ["username", "email", "password", "bio", "profile_picture", "token"]
+# --------------------------
+# Registration endpoint
+# --------------------------
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
 
-    def create(self, validated_data):
-
-        user = User.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data.get("email", ""),
-            password=validated_data["password"],
-            bio=validated_data.get("bio", ""),
-            profile_picture=validated_data.get("profile_picture", None)
-        )
-
-        token = Token.objects.create(user=user)
-        user.token = token.key
-        return user
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["token"] = Token.objects.get(user=instance).key
-        return data
+    # create() method is handled by serializer
+    # Returns user data + token automatically
 
 
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
+# --------------------------
+# Login endpoint
+# --------------------------
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
 
-    def validate(self, data):
-        user = authenticate(username=data["username"], password=data["password"])
-        if not user:
-            raise serializers.ValidationError("Invalid username or password")
-        data["user"] = user
-        return data
+    def post(self, request, *args, **kwargs):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+
+        # Get or create token
+        token, _ = Token.objects.get_or_create(user=user)
+
+        # Return token + serialized user
+        return Response({
+            "token": token.key,
+            "user": UserSerializer(user).data
+        })
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "username", "email", "bio", "profile_picture"]
+# --------------------------
+# Profile endpoint (get/update)
+# --------------------------
+class ProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        # Only allow access to own profile
+        return self.request.user
 
