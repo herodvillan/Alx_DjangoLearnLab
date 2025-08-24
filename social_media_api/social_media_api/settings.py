@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'posts',
+    'notifications',
     'accounts',
     'rest_framework',
     'django.contrib.staticfiles',
@@ -103,7 +104,7 @@ AUTH_PASSWORD_VALIDATORS = [
 SECUR_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_SSL_REDIRECT = True
-
+SECURE_BROWSER_XSS_FILTER = True
 
 
 
