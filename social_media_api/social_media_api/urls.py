@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/accounts/", include("accounts.urls")),
     # Posts endpoints
     path("api/posts/", include("posts.urls")),
+    path("api/notifications/", include("notifications.urls")),
 ]
 
 # Serve media files in development
