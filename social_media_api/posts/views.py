@@ -1,18 +1,15 @@
-from rest_framework import status, permissions
-from rest_framework.views import APIView
+from rest_framework import status, permissions, generics
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.contrib.contenttypes.models import ContentType
-
 from .models import Post, Like
 from notifications.models import Notification
 
-
-class LikePostView(APIView):
+class LikePostView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, post_id):
-        post = get_object_or_404(Post, id=post_id)
+    def post(self, request, pk):
+        # ✅ use pk=pk
+        post = get_object_or_404(Post, pk=pk)
 
         # Prevent duplicate likes
         like, created = Like.objects.get_or_create(user=request.user, post=post)
@@ -20,8 +17,8 @@ class LikePostView(APIView):
             return Response({"detail": "You already liked this post."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Create a notification for the post author
-        if post.author != request.user:  # don’t notify yourself
+        # Create notification if liking someone else's post
+        if post.author != request.user:
             Notification.objects.create(
                 recipient=post.author,
                 actor=request.user,
@@ -29,15 +26,14 @@ class LikePostView(APIView):
                 target=post,
             )
 
-        return Response({"detail": "Post liked successfully."},
-                        status=status.HTTP_201_CREATED)
+        return Response({"detail": "Post liked successfully."}, status=status.HTTP_201_CREATED)
 
 
-class UnlikePostView(APIView):
+class UnlikePostView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, post_id):
-        post = get_object_or_404(Post, id=post_id)
+    def post(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
         like = Like.objects.filter(user=request.user, post=post).first()
 
         if not like:
@@ -45,8 +41,7 @@ class UnlikePostView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         like.delete()
-        return Response({"detail": "Post unliked successfully."},
-                        status=status.HTTP_200_OK)
+        return Response({"detail": "Post unliked successfully."}, status=status.HTTP_200_OK)
 
 
 # --------------------------
