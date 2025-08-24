@@ -1,74 +1,47 @@
-from rest_framework import generics, status, permissions
+from rest_framework import viewsets, permissions
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
-from .models import CustomUser
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from rest_framework.views import APIView
+from .models import Post, Comment
+from .serializers import PostSerializer, CommentSerializer
 
 
 # --------------------------
-# User Registration
+# Post ViewSet
 # --------------------------
-class RegisterView(generics.GenericAPIView):
-    serializer_class = RegisterSerializer
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            "user": UserSerializer(user).data,
-            "token": token.key
-        }, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 # --------------------------
-# User Login
+# Comment ViewSet
 # --------------------------
-class LoginView(generics.GenericAPIView):
-    serializer_class = LoginSerializer
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        username = serializer.validated_data["username"]
-        password = serializer.validated_data["password"]
-        user = authenticate(username=username, password=password)
-
-        if not user:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            "user": UserSerializer(user).data,
-            "token": token.key
-        })
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 # --------------------------
-# User Profile
+# Feed View (Posts from Following)
 # --------------------------
-class ProfileView(generics.GenericAPIView):
-    serializer_class = UserSerializer
+class FeedView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        return Response(UserSerializer(request.user).data)
+        # get all users the current user is following
+        following_users = request.user.following.all()
 
-    def put(self, request, *args, **kwargs):
-        serializer = self.get_serializer(request.user, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        # filter posts by authors in that following list
+        posts = Post.objects.filter(author__in=following_users).order_by("-created_at")
+
+        serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
-
-
-# --------------------------
-# User List (explicit CustomUser.objects.all())
-# --------------------------
-class UserListView(generics.ListAPIView):
-    queryset = CustomUser.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
 
